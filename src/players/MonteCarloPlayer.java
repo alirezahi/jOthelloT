@@ -45,8 +45,8 @@ public class MonteCarloPlayer extends AbstractPlayer {
             this.activePlayer =1;
         }
         public Node addChild(int [][] board,int index){
-            Node node = new Node(null, board, this.unexamined.get(index).getBardPlace(),game);
-            node.unexamined = new ArrayList<>();
+            Node node = new Node(this, board, this.unexamined.get(index).getBardPlace(),game);
+            this.unexamined.remove(index);
             this.children.add(node);
             return node;
         }
@@ -97,28 +97,29 @@ public class MonteCarloPlayer extends AbstractPlayer {
                 System.out.println("ali");
                 Node node = root;
                 int[][] new_board = tab.clone();
-//                boardSquare = this.play(new_board);
+
                 /* Selection */
                 while(node.unexamined.size() == 0 && node.children.size()>0){
                     node = node.selectChild();
                     game.do_move(new_board,node.action,this);
-//                    game.do_move()
                 }
+                System.out.println(node.unexamined.size());
                 /* Expansion */
                 if(node.unexamined.size() > 0){
                     int j = (int)Math.floor(Math.random() * node.unexamined.size());
+                    System.out.println("k");
                     game.do_move(new_board,node.unexamined.get(j).getBardPlace(),this);
-//                    game.do_move()
                     node = node.addChild(new_board,j);
                 }
+
                 /* Simulation */
                 List<Move> actions =  game.getValidMoves(new_board,getMyBoardMark());
                 while(actions.size() > 0){
-                    System.out.println("w");
                     game.do_move(new_board,actions.get((int)(Math.floor(Math.random() * actions.size()))).getBardPlace(),this);
                     ++nodesVisited;
                     actions = game.getValidMoves(new_board,getMyBoardMark());
                 }
+
                 /* Backpropagation */
                 int[] result = new int[2]; // = game.getResult();
                 while (node != null){
