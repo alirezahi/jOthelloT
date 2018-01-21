@@ -27,15 +27,15 @@ public class MonteCarloPlayer extends AbstractPlayer {
 
     public class Node{
         public List<Move> unexamined;
-        public Move action;
+        public BoardSquare action;
         OthelloGame game;
         public int wins = 0;
         public int visits = 0;
         public Node parent;
         public ArrayList<Node> children = new ArrayList<>();
         public int activePlayer ;
-        public Node(Node parentNode,int [][] board, Move move,OthelloGame game){
-            this.action = move;
+        public Node(Node parentNode,int [][] board, BoardSquare boardSquare,OthelloGame game){
+            this.action = boardSquare;
             this.game = game;
             this.wins = 0;
             this.visits = 0;
@@ -45,7 +45,7 @@ public class MonteCarloPlayer extends AbstractPlayer {
             this.activePlayer =1;
         }
         public Node addChild(int [][] board,int index){
-            Node node = new Node(null, board, this.unexamined.get(index),game);
+            Node node = new Node(null, board, this.unexamined.get(index).getBardPlace(),game);
             node.unexamined = new ArrayList<>();
             this.children.add(node);
             return node;
@@ -83,37 +83,39 @@ public class MonteCarloPlayer extends AbstractPlayer {
     @Override
     public BoardSquare play(int[][] tab) {
         OthelloGame game = new OthelloGame();
-        int maxTime=1000000000;
-        int maxIterations=1000000000;
+        int maxTime=100000;
+        int maxIterations=10000;
         Node root = new Node(null, tab, null,game);
         long startTime = (new Date()).getTime();
         long timeLimit = startTime + maxTime;
         int blockSize = 50;
         int nodesVisited = 0;
-        BoardSquare boardSquare = null;
 
         for(int iterations=0; iterations<maxIterations && (new Date()).getTime()<timeLimit; iterations+=blockSize) {
+            System.out.println(iterations);
             for (int i = 0; i < blockSize; ++i) {
+                System.out.println("ali");
                 Node node = root;
                 int[][] new_board = tab.clone();
-                boardSquare = this.play(new_board);
+//                boardSquare = this.play(new_board);
                 /* Selection */
                 while(node.unexamined.size() == 0 && node.children.size()>0){
                     node = node.selectChild();
-                    game.do_move(new_board,boardSquare,this);
+                    game.do_move(new_board,node.action,this);
 //                    game.do_move()
                 }
                 /* Expansion */
                 if(node.unexamined.size() > 0){
                     int j = (int)Math.floor(Math.random() * node.unexamined.size());
-                    game.do_move(new_board,boardSquare,this);
+                    game.do_move(new_board,node.unexamined.get(j).getBardPlace(),this);
 //                    game.do_move()
                     node = node.addChild(new_board,j);
                 }
                 /* Simulation */
                 List<Move> actions =  game.getValidMoves(new_board,getMyBoardMark());
                 while(actions.size() > 0){
-                    game.do_move(new_board,boardSquare,this);
+                    System.out.println("w");
+                    game.do_move(new_board,actions.get((int)(Math.floor(Math.random() * actions.size()))).getBardPlace(),this);
                     ++nodesVisited;
                     actions = game.getValidMoves(new_board,getMyBoardMark());
                 }
@@ -128,7 +130,7 @@ public class MonteCarloPlayer extends AbstractPlayer {
 
         long duration = (new Date().getTime()) - startTime;
 
-        return boardSquare;
+        return root.mostVisitedNode().action;
 //
 //        OthelloGame jogo = new OthelloGame();
 //        Random r = new Random();
